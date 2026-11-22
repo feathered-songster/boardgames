@@ -1,0 +1,109 @@
+name: Release
+
+# Monorepo flow (release-please manifest mode, one release PR per package):
+#   1. Conventional-commit PRs merge to main. Commits touching backend/ count toward the
+#      backend release, commits touching frontend/ toward the frontend release.
+#   2. release-please opens "chore(main): release backend X.Y.Z" and/or "... frontend X.Y.Z".
+#   3. Merging a release PR creates a component tag (backend-vX.Y.Z / frontend-vX.Y.Z)
+#      and a GitHub release.
+#   4. In the same run: backend -> PyPI + Docker Hub, frontend -> Docker Hub.
+#
+# Publishing lives here instead of "on: push: tags" because tags created with the default
+# GITHUB_TOKEN do not trigger other workflows.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      backend_released: ${{ steps.rp.outputs['backend--release_created'] }}
+      backend_tag: ${{ steps.rp.outputs['backend--tag_name'] }}
+      backend_version: ${{ steps.rp.outputs['backend--version'] }}
+      frontend_released: ${{ steps.rp.outputs['frontend--release_created'] }}
+      frontend_tag: ${{ steps.rp.outputs['frontend--tag_name'] }}
+      frontend_version: ${{ steps.rp.outputs['frontend--version'] }}
+    steps:
+      - id: rp
+        uses: googleapis/release-please-action@v4
+        with:
+          # A PAT makes CI run on release PRs (GITHUB_TOKEN-created PRs don't trigger workflows).
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish-pypi:
+    needs: release-please
+    if: needs.release-please.outputs.backend_released == 'true'
+    runs-on: ubuntu-latest
+    environment: pypi # Trusted Publisher on pypi.org: this repo, workflow release.yml, environment pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.backend_tag }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build && python -m build backend
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: backend/dist/
+
+  publish-backend-image:
+    needs: release-please
+    if: needs.release-please.outputs.backend_released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.backend_tag }}
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/boardgames-api:${{ needs.release-please.outputs.backend_version }}
+            ${{ vars.DOCKERHUB_USERNAME }}/boardgames-api:latest
+
+  publish-frontend-image:
+    needs: release-please
+    if: needs.release-please.outputs.frontend_released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.frontend_tag }}
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/boardgames-web:${{ needs.release-please.outputs.frontend_version }}
+            ${{ vars.DOCKERHUB_USERNAME }}/boardgames-web:latest

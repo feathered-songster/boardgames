@@ -1,0 +1,11 @@
+# Build from this checkout instead of pulling images (also used by CI's smoke test):
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  backend:
+    build: ./backend
+    image: boardgames-api:dev
+    ports:
+      - "8000:8000" # Swagger UI at http://localhost:8000/docs
+  frontend:
+    build: ./frontend
+    image: boardgames-web:dev

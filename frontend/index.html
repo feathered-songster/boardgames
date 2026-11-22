@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game shelf</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Game shelf</h1>
+        <input id="search" type="search" placeholder="Search by title" aria-label="Search by title" />
+      </header>
+
+      <form id="game-form" autocomplete="off">
+        <h2 id="form-title">Add a game</h2>
+        <label>Title <input name="title" required maxlength="200" /></label>
+        <label>Designer <input name="designer" /></label>
+        <label>Year <input name="year_published" type="number" min="1800" max="2100" /></label>
+        <label>Min players <input name="min_players" type="number" min="1" value="1" /></label>
+        <label>Max players <input name="max_players" type="number" min="1" value="4" /></label>
+        <label>Minutes <input name="play_time_minutes" type="number" min="1" /></label>
+        <label class="wide">Notes <textarea name="description" rows="2"></textarea></label>
+        <div class="actions">
+          <button type="submit" id="save">Add game</button>
+          <button type="button" id="cancel" hidden>Cancel edit</button>
+        </div>
+        <p id="error" role="alert" hidden></p>
+      </form>
+
+      <ul id="games" aria-live="polite"></ul>
+      <p id="empty" hidden>Nothing on the shelf yet. Add your first game above.</p>
+    </main>
+    <footer>Frontend v<span id="version"></span> &middot; API v<span id="api-version">?</span></footer>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
