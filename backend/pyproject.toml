@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 # NOTE: PyPI names are global. Check that this one is free, or rename it
 # (also rename in release-please-config.json and boardgames_api/__init__.py).
 name = "boardgames-catalog-api"
-version = "0.0.0" # managed by release-please, do not edit by hand
+version = "0.1.0" # managed by release-please, do not edit by hand
 description = "Board games catalog API (FastAPI + PostgreSQL)"
 readme = "README.md"
 requires-python = ">=3.11"
