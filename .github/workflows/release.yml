@@ -31,7 +31,7 @@ jobs:
       frontend_version: ${{ steps.rp.outputs['frontend--version'] }}
     steps:
       - id: rp
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@v5
         with:
           # A PAT makes CI run on release PRs (GITHUB_TOKEN-created PRs don't trigger workflows).
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
