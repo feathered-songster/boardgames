@@ -18,7 +18,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ## GitHub setup
 
 ```bash
-gh auth login
+gh auth login -> gh auth login -h github.com -s repo -s workflow
 DOCKERHUB_TOKEN=... RELEASE_PLEASE_TOKEN=... ./setup-github.sh <github-user> <dockerhub-user>
 # VISIBILITY=private ./setup-github.sh ...   (branch protection then needs GitHub Pro/Team)
 # REVIEWS=1 ./setup-github.sh ...            (if you are solo with one helper account)

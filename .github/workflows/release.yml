@@ -42,7 +42,9 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.backend_released == 'true'
     runs-on: ubuntu-latest
-    environment: pypi # Trusted Publisher on pypi.org: this repo, workflow release.yml, environment pypi
+    environment:
+      name: pypi # Trusted Publisher on test.pypi.org: this repo, workflow release.yml, environment pypi
+      url: https://test.pypi.org/project/boardgames-catalog-api/ # Remove this line and make the publisher trusted on the real PyPI, if no longer testing
     permissions:
       id-token: write
       contents: read
@@ -57,6 +59,7 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: backend/dist/
+          repository-url: https://test.pypi.org/legacy/ # Remove this line and make the publisher trusted on the real PyPI, if no longer testing
 
   publish-backend-image:
     needs: release-please
